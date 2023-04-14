@@ -13,6 +13,14 @@ return [
     'realm' => env('KEYCLOAK_REALM', 'master'),
 
     /*
+     * Keycloak Realm retrieval method. Available options:
+     * - cached-api
+     * - api
+     * - config
+     */
+    'realm_public_key_retrieval_mode' => env('REALM_PUBLIC_KEY_RETRIEVAL_MODE', 'cached-api'),
+
+    /*
      * Here you may define the cache store that should be used to store
      * realm public key. This can be the name of any store that is
      * configured in app/config/cache.php

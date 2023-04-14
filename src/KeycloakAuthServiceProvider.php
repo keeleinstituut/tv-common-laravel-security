@@ -11,6 +11,8 @@ use KeycloakAuthGuard\Middleware\EnsureUserHasPrivilege;
 use KeycloakAuthGuard\Services\ApiRealmPublicKeyRetriever;
 use KeycloakAuthGuard\Services\CachedRealmPublicKeyRetriever;
 use GuzzleHttp\Client;
+use KeycloakAuthGuard\Services\ConfigRealmPublicKeyRetriever;
+use KeycloakAuthGuard\Services\RealmPublicKeyRetrieverInterface;
 
 class KeycloakAuthServiceProvider extends AuthServiceProvider
 {
@@ -28,17 +30,28 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
     {
         Auth::extend('keycloak', function ($app, $name, array $config) {
             return new KeycloakGuard(
-                new CachedRealmPublicKeyRetriever(
-                    new ApiRealmPublicKeyRetriever(
-                        new Client(Config::get('keycloak.guzzle_options', []))
-                    ),
-                    app('cache')->store(Config::get('keycloak.realm_public_key_cache_store'))
-                ),
+                $this->getRealmPublicKeyRetriever(),
                 Auth::createUserProvider($config['provider']),
                 $app->request
             );
         });
 
         $this->app['router']->aliasMiddleware('has-privilege', EnsureUserHasPrivilege::class);
+    }
+
+    protected function getRealmPublicKeyRetriever(): RealmPublicKeyRetrieverInterface
+    {
+        return match (Config::get('keycloak.realm_public_key_retrieval_mode')) {
+            'api' => new ApiRealmPublicKeyRetriever(
+                new Client(Config::get('keycloak.guzzle_options', []))
+            ),
+            'cached-api' => new CachedRealmPublicKeyRetriever(
+                new ApiRealmPublicKeyRetriever(
+                    new Client(Config::get('keycloak.guzzle_options', []))
+                ),
+                app('cache')->store(Config::get('keycloak.realm_public_key_cache_store'))
+            ),
+            default => new ConfigRealmPublicKeyRetriever()
+        };
     }
 }

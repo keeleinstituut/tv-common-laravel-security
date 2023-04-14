@@ -74,16 +74,9 @@ class TestCase extends Orchestra
 
         $app['config']->set('keycloak', [
             'realm_public_key' => $this->plainPublicKey(),
-            'jwt_payload_custom_claims_attribute' => 'tolkevarav'
+            'jwt_payload_custom_claims_attribute' => 'tolkevarav',
+            'realm_public_key_retrieval_mode' => 'config'
         ]);
-
-        Auth::extend('keycloak', function ($app, $name, array $config) {
-            return new KeycloakGuard(
-                new ConfigRealmPublicKeyRetriever(),
-                Auth::createUserProvider($config['provider']),
-                $app->request
-            );
-        });
     }
 
     protected function setUpDatabase(Application $app): void

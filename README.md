@@ -68,15 +68,24 @@ php artisan vendor:publish  --provider="KeycloakAuthGuard\KeycloakAuthServicePro
 
 ### Config parameters:
 
+*  `REALM_PUBLIC_KEY_RETRIEVAL_MODE`
+
+*Required. Default is `cached-api`*
+
+Parameter defines the mode of how realm public key will be retrieved. Available options:
+- `cached-api`
+- `api`
+- `config`
+
 *  `KEYCLOAK_BASE_URL`
 
-*Required in case of usage `KeycloakAuthGuard\Services\ApiRealmPublicKeyRetriever`*
+*Required in case `REALM_PUBLIC_KEY_RETRIEVAL_MODE` equal to `api` or `cached-api`*
 
 URL to keycloak. Format: https://your-keycloak-server.com/.
 
 *  `KEYCLOAK_REALM`
 
-*Required in case of usage `KeycloakAuthGuard\Services\ApiRealmPublicKeyRetriever`*
+*Required in case `REALM_PUBLIC_KEY_RETRIEVAL_MODE` equal to `api` or `cached-api`*
 
 Name of the keycloak realm.
 
@@ -84,18 +93,9 @@ Name of the keycloak realm.
 *  `KEYCLOAK_REALM_PUBLIC_KEY`
 
 *Default is `null`.*
+*Required in case `REALM_PUBLIC_KEY_RETRIEVAL_MODE` equal to `config`*
 
 The Keycloak Server realm public key (string). Application can auto fetch of realm public key and store it in the cache.
-To configure the package to work with `KEYCLOAK_REALM_PUBLIC_KEY` you have to redefine `KeycloakAuthGuard\KeycloakAuthServiceProvider` in the next way:
-```php
-     Auth::extend('keycloak', function ($app, $name, array $config) {
-         return new KeycloakGuard(
-             new ConfigRealmPublicKeyRetriever(),
-             Auth::createUserProvider($config['provider']),
-             $app->request
-         );
-     });
-```
 
 *  `KEYCLOAK_USER_PROVIDER_CREDENTIAL`
 
