@@ -12,14 +12,14 @@ Add the next code into composer.json
 
 ```json
 {
-    "repositories": [
+  "repositories": [
         {
-            "url": "https://github.com/keeleinstituut/tv-common-laravel-security",
-            "type": "git"
+          "type": "vcs",
+          "url": "https://github.com/keeleinstituut/tv-common-laravel-security.git"
         }
-    ],
+  ],
     "require": {
-        "tv-common-laravel-security": "*"
+      "keeleinstituut/tv-common-laravel-security": "dev-master"
     }
 }
 ```
