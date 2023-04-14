@@ -1,5 +1,5 @@
 {
-    "name": "keeleinstituut/tv-common-security",
+    "name": "keeleinstituut/tv-common-laravel-security",
     "description": "Authorization lib of Tõlkevärav",
     "keywords": [
         "laravel",
