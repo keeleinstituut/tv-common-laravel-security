@@ -39,7 +39,7 @@ class KeycloakGuard implements Guard
      */
     private function authenticate(): void
     {
-        $this->decodedToken = $this->decoder->getDecodedJWT();
+        $this->decodedToken = $this->decoder->getDecodedJwt();
         if ($this->decodedToken && $this->validate($this->getUserCredentials())) {
             $this->setUser($this->lastAttempted);
         }

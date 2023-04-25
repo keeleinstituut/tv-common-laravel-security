@@ -14,7 +14,7 @@ readonly class RequestBasedJwtTokenDecoder
     ) {
     }
 
-    public function getDecodedJWT(): ?stdClass
+    public function getDecodedJwt(): ?stdClass
     {
         if (! $token = $this->getToken()) {
             return null;
