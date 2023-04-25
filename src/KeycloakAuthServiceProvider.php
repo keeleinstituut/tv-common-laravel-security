@@ -2,6 +2,7 @@
 
 namespace KeycloakAuthGuard;
 
+use GuzzleHttp\Client;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -10,16 +11,16 @@ use KeycloakAuthGuard\Auth\JwtPayloadUserProvider;
 use KeycloakAuthGuard\Middleware\EnsureUserHasPrivilege;
 use KeycloakAuthGuard\Services\ApiRealmPublicKeyRetriever;
 use KeycloakAuthGuard\Services\CachedRealmPublicKeyRetriever;
-use GuzzleHttp\Client;
 use KeycloakAuthGuard\Services\ConfigRealmPublicKeyRetriever;
 use KeycloakAuthGuard\Services\RealmPublicKeyRetrieverInterface;
+use UnexpectedValueException;
 
 class KeycloakAuthServiceProvider extends AuthServiceProvider
 {
     public function boot()
     {
-        $this->publishes([__DIR__ . '/../config/keycloak.php' => config_path('keycloak.php')], 'config');
-        $this->mergeConfigFrom(__DIR__ . '/../config/keycloak.php', 'keycloak');
+        $this->publishes([__DIR__.'/../config/keycloak.php' => config_path('keycloak.php')], 'config');
+        $this->mergeConfigFrom(__DIR__.'/../config/keycloak.php', 'keycloak');
 
         Auth::provider('jwt-payload-users', function ($app, array $config) {
             return new JwtPayloadUserProvider($config['model']);
@@ -41,7 +42,9 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
 
     protected function getRealmPublicKeyRetriever(): RealmPublicKeyRetrieverInterface
     {
-        return match (Config::get('keycloak.realm_public_key_retrieval_mode')) {
+        $mode = Config::get('keycloak.realm_public_key_retrieval_mode');
+
+        return match ($mode) {
             'api' => new ApiRealmPublicKeyRetriever(
                 new Client(Config::get('keycloak.guzzle_options', []))
             ),
@@ -51,7 +54,8 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
                 ),
                 app('cache')->store(Config::get('keycloak.realm_public_key_cache_store'))
             ),
-            default => new ConfigRealmPublicKeyRetriever()
+            'config' => new ConfigRealmPublicKeyRetriever(),
+            default => throw new UnexpectedValueException("Unsupported value for realm_public_key_retrieval_mode: $mode")
         };
     }
 }

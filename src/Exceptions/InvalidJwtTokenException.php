@@ -6,5 +6,4 @@ use Nette\InvalidArgumentException;
 
 class InvalidJwtTokenException extends InvalidArgumentException
 {
-
 }

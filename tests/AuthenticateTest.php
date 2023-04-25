@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 use KeycloakAuthGuard\Auth\Guards\KeycloakGuard;
 use KeycloakAuthGuard\Auth\JwtPayloadUserProvider;
 use KeycloakAuthGuard\Exceptions\InvalidJwtTokenException;
-use KeycloakAuthGuard\Exceptions\UserNotFoundException;
 use KeycloakAuthGuard\Models\JwtPayloadUser;
 use KeycloakAuthGuard\Services\ConfigRealmPublicKeyRetriever;
 
@@ -65,12 +64,12 @@ class AuthenticateTest extends TestCase
 
     public function test_throws_a_exception_when_user_is_not_found()
     {
-        $this->expectException(UserNotFoundException::class);
+        $this->expectException(AuthenticationException::class);
 
         $this->buildCustomToken([
             'tolkevarav' => [
-                'personalIdentityCode' => 'some_code'
-            ]
+                'personalIdentityCode' => 'some_code',
+            ],
         ]);
 
         $this->withKeycloakToken()->json('GET', '/foo/secret');
@@ -82,9 +81,9 @@ class AuthenticateTest extends TestCase
             'tolkevarav' => [
                 'personalIdentityCode' => '3430717934355',
                 'privileges' => [
-                    'ADD_ROLE'
-                ]
-            ]
+                    'ADD_ROLE',
+                ],
+            ],
         ]);
 
         $this->withKeycloakToken()->json('GET', '/foo/secret');
@@ -97,9 +96,9 @@ class AuthenticateTest extends TestCase
             'tolkevarav' => [
                 'personalIdentityCode' => '3430717934355',
                 'privileges' => [
-                    'access_to_super_secret'
-                ]
-            ]
+                    'access_to_super_secret',
+                ],
+            ],
         ]);
 
         $this->withKeycloakToken()
@@ -113,9 +112,9 @@ class AuthenticateTest extends TestCase
             'tolkevarav' => [
                 'personalIdentityCode' => '3430717934355',
                 'privileges' => [
-                    'not_so_secret'
-                ]
-            ]
+                    'not_so_secret',
+                ],
+            ],
         ]);
 
         $this->expectException(AuthorizationException::class);
@@ -128,9 +127,9 @@ class AuthenticateTest extends TestCase
             'tolkevarav' => [
                 'personalIdentityCode' => '3430717934355',
                 'privileges' => [
-                    'ADD_ROLE'
-                ]
-            ]
+                    'ADD_ROLE',
+                ],
+            ],
         ]);
 
         $this->withKeycloakToken()->json('GET', '/foo/secret');
@@ -166,7 +165,7 @@ class AuthenticateTest extends TestCase
                     'id' => '734f0f6c-ea6e-4c6a-ab77-6fa32044a0c4',
                     'name' => 'Some Institution',
                 ],
-            ]
+            ],
         ]);
 
         $this->withKeycloakToken()->json('GET', '/foo/secret');
@@ -181,7 +180,7 @@ class AuthenticateTest extends TestCase
             'iat' => time() + 30,   // time ahead in the future
             'tolkevarav' => [
                 'personalIdentityCode' => '3430717934355',
-            ]
+            ],
         ]);
 
         $this->withKeycloakToken()->json('GET', '/foo/secret');
@@ -196,7 +195,7 @@ class AuthenticateTest extends TestCase
             'iat' => time() + 30, // time ahead in the future
             'tolkevarav' => [
                 'personalIdentityCode' => '3430717934355',
-            ]
+            ],
         ]);
 
         $this->withKeycloakToken()->json('GET', '/foo/secret');
@@ -205,9 +204,9 @@ class AuthenticateTest extends TestCase
 
     public function test_authenticates_with_custom_input_key()
     {
-        config(['keycloak.input_key' => "api_token"]);
+        config(['keycloak.input_key' => 'api_token']);
 
-        $this->json('GET', '/foo/secret?api_token=' . $this->token);
+        $this->json('GET', '/foo/secret?api_token='.$this->token);
 
         $this->assertEquals($this->user->id, Auth::id());
 
@@ -216,7 +215,7 @@ class AuthenticateTest extends TestCase
 
     public function test_authentication_prefers_bearer_token_over_with_custom_input_key()
     {
-        config(['keycloak.input_key' => "api_token"]);
+        config(['keycloak.input_key' => 'api_token']);
 
         $this->withKeycloakToken()->json('GET', '/foo/secret?api_token=some-junk');
 

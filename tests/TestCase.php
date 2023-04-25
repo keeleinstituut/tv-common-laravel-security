@@ -6,21 +6,21 @@ use Firebase\JWT\JWT;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use KeycloakAuthGuard\Auth\Guards\KeycloakGuard;
 use KeycloakAuthGuard\KeycloakAuthServiceProvider;
-use KeycloakAuthGuard\Services\ConfigRealmPublicKeyRetriever;
 use KeycloakAuthGuard\Tests\Factories\UserFactory;
 use KeycloakAuthGuard\Tests\Models\User;
-use Orchestra\Testbench\TestCase as Orchestra;
 use OpenSSLAsymmetricKey;
+use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
 {
     public OpenSSLAsymmetricKey $privateKey;
+
     public string $publicKey;
+
     public array $payload;
+
     public string $token;
 
     protected function setUp(): void
@@ -37,7 +37,7 @@ class TestCase extends Orchestra
 
         // Default user, same as jwt token
         $this->user = UserFactory::new()->create([
-            'personal_identification_code' => '3430717934355'
+            'personal_identification_code' => '3430717934355',
         ]);
     }
 
@@ -47,7 +47,7 @@ class TestCase extends Orchestra
         $this->privateKey = openssl_pkey_new([
             'digest_alg' => 'sha256',
             'private_key_bits' => 1024,
-            'private_key_type' => OPENSSL_KEYTYPE_RSA
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
         ]);
 
         $this->publicKey = openssl_pkey_get_details($this->privateKey)['key'];
@@ -55,7 +55,7 @@ class TestCase extends Orchestra
         $this->payload = [
             'tolkevarav' => [
                 'personalIdentityCode' => '3430717934355',
-            ]
+            ],
         ];
 
         $this->token = JWT::encode($this->payload, $this->privateKey, 'RS256');
@@ -69,13 +69,13 @@ class TestCase extends Orchestra
 
         $app['config']->set('auth.guards.api', [
             'driver' => 'keycloak',
-            'provider' => 'users'
+            'provider' => 'users',
         ]);
 
         $app['config']->set('keycloak', [
             'realm_public_key' => $this->plainPublicKey(),
             'jwt_payload_custom_claims_attribute' => 'tolkevarav',
-            'realm_public_key_retrieval_mode' => 'config'
+            'realm_public_key_retrieval_mode' => 'config',
         ]);
     }
 
@@ -115,6 +115,7 @@ class TestCase extends Orchestra
     {
         $string = str_replace('-----BEGIN PUBLIC KEY-----', '', $this->publicKey);
         $string = trim(str_replace('-----END PUBLIC KEY-----', '', $string));
+
         return str_replace('\n', '', $string);
     }
 

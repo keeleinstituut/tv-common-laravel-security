@@ -9,12 +9,19 @@ use KeycloakAuthGuard\Exceptions\InvalidJwtTokenPayloadException;
 readonly class JwtPayloadUser implements Authenticatable
 {
     public string $id;
+
     public string $personalIdentityCode;
+
     public string $institutionUserId;
+
     public string $institutionId;
+
     public string $institutionName;
+
     public string $forename;
+
     public string $surname;
+
     public array $privileges;
 
     public function __construct(array $jwtPayloadData)
@@ -30,7 +37,7 @@ readonly class JwtPayloadUser implements Authenticatable
         $this->institutionName = $jwtPayloadData['selectedInstitution']['name'] ?? '';
 
         if (empty($this->id) || empty($this->personalIdentityCode)) {
-            throw new InvalidJwtTokenPayloadException("JWT token payload structure not match with configured user model");
+            throw new InvalidJwtTokenPayloadException('JWT token payload structure not match with configured user model');
         }
     }
 

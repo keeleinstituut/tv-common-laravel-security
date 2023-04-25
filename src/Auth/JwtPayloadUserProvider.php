@@ -8,11 +8,8 @@ use Illuminate\Contracts\Auth\UserProvider;
 
 readonly class JwtPayloadUserProvider implements UserProvider
 {
-
     /**
      * The Constructor
-     *
-     * @param string $userModelClassName
      */
     public function __construct(private string $userModelClassName)
     {
@@ -20,9 +17,6 @@ readonly class JwtPayloadUserProvider implements UserProvider
 
     /**
      * Retrieve a user by the given credentials.
-     *
-     * @param  array  $credentials
-     * @return Authenticatable|null
      */
     public function retrieveByCredentials(array $credentials): ?Authenticatable
     {
@@ -35,7 +29,6 @@ readonly class JwtPayloadUserProvider implements UserProvider
      * Retrieve a user by their unique identifier.
      *
      * @param  mixed  $identifier
-     * @return Authenticatable|null
      */
     public function retrieveById($identifier): ?Authenticatable
     {
@@ -47,7 +40,6 @@ readonly class JwtPayloadUserProvider implements UserProvider
      *
      * @param  mixed  $identifier
      * @param  string  $token
-     * @return Authenticatable|null
      */
     public function retrieveByToken($identifier, $token): ?Authenticatable
     {
@@ -57,9 +49,7 @@ readonly class JwtPayloadUserProvider implements UserProvider
     /**
      * Update the "remember me" token for the given user in storage.
      *
-     * @param Authenticatable $user
      * @param  string  $token
-     * @return void
      */
     public function updateRememberToken(Authenticatable $user, $token): void
     {
@@ -68,10 +58,6 @@ readonly class JwtPayloadUserProvider implements UserProvider
 
     /**
      * Validate a user against the given credentials.
-     *
-     * @param Authenticatable $user
-     * @param  array  $credentials
-     * @return bool
      */
     public function validateCredentials(Authenticatable $user, array $credentials): bool
     {

@@ -11,7 +11,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use KeycloakAuthGuard\Auth\JwtPayloadUserProvider;
 use KeycloakAuthGuard\Exceptions\InvalidJwtTokenException;
-use KeycloakAuthGuard\Exceptions\UserNotFoundException;
 use KeycloakAuthGuard\JwtToken;
 use KeycloakAuthGuard\Services\RealmPublicKeyRetrieverInterface;
 use stdClass;
@@ -19,19 +18,19 @@ use stdClass;
 class KeycloakGuard implements Guard
 {
     private ?Authenticatable $user;
+
     private ?stdClass $decodedToken;
 
     /**
-     * @param RealmPublicKeyRetrieverInterface $publicKeyRetriever
-     * @param UserProvider $provider
-     * @param Request $request
+     * The user we last attempted to retrieve.
      */
+    protected ?Authenticatable $lastAttempted;
+
     public function __construct(
         private readonly RealmPublicKeyRetrieverInterface $publicKeyRetriever,
-        private readonly UserProvider                     $provider,
-        private readonly Request                          $request
-    )
-    {
+        private readonly UserProvider $provider,
+        private readonly Request $request
+    ) {
         $this->user = null;
         $this->decodedToken = null;
         $this->authenticate();
@@ -40,40 +39,41 @@ class KeycloakGuard implements Guard
     /**
      * Decode token, validate and authenticate user
      *
-     * @return void
      * @throws InvalidJwtTokenException
      */
     private function authenticate(): void
     {
+        if (! $token = $this->getTokenFromRequest()) {
+            return;
+        }
+
         try {
             $this->decodedToken = JwtToken::decode(
-                $this->getTokenForRequest(),
+                $token,
                 $this->publicKeyRetriever->getPublicKey(),
                 Config::get('keycloak.leeway')
             );
         } catch (Exception $e) {
-            throw new InvalidJwtTokenException($e->getMessage());
+            throw new InvalidJwtTokenException('JWT token is invalid', 0, $e);
         }
 
-        if ($this->decodedToken) {
-            $this->validate($this->getUserCredentials());
+        if ($this->decodedToken && $this->validate($this->getUserCredentials())) {
+            $this->setUser($this->lastAttempted);
         }
     }
 
     /**
      * Get the token for the current request.
-     *
-     * @return string
      */
-    private function getTokenForRequest(): string
+    private function getTokenFromRequest(): string
     {
-        if (!empty($this->request->bearerToken())) {
+        if (! empty($this->request->bearerToken())) {
             return $this->request->bearerToken();
         }
 
-        if (!empty(Config::get('keycloak.input_key', ''))) {
+        if (! empty(Config::get('keycloak.input_key', ''))) {
             return $this->request->input(
-                Config::get('keycloak.input_key', '')
+                Config::get('keycloak.input_key')
             );
         }
 
@@ -82,8 +82,6 @@ class KeycloakGuard implements Guard
 
     /**
      * Get the user credentials for retrieving of the user.
-     *
-     * @return array
      */
     private function getUserCredentials(): array
     {
@@ -92,7 +90,7 @@ class KeycloakGuard implements Guard
         }
 
         return [
-            Config::get('keycloak.user_provider_credential') => $this->getTokenPayloadData(Config::get('keycloak.token_principal_attribute'))
+            Config::get('keycloak.user_provider_credential') => $this->getTokenPayloadData(Config::get('keycloak.token_principal_attribute')),
         ];
     }
 
@@ -121,39 +119,30 @@ class KeycloakGuard implements Guard
 
     /**
      * Determine if the current user is authenticated.
-     *
-     * @return bool
      */
     public function check(): bool
     {
-        return !is_null($this->user());
+        return ! is_null($this->user());
     }
 
     /**
      * Determine if the guard has a user instance.
-     *
-     * @return bool
      */
     public function hasUser(): bool
     {
-        return !is_null($this->user());
+        return ! is_null($this->user());
     }
 
     /**
      * Determine if the current user is a guest.
-     *
-     * @return bool
      */
     public function guest(): bool
     {
-        return !$this->check();
+        return ! $this->check();
     }
 
     /**
      * Set the current user.
-     *
-     * @param Authenticatable $user
-     * @return void
      */
     public function setUser(Authenticatable $user): void
     {
@@ -162,67 +151,42 @@ class KeycloakGuard implements Guard
 
     /**
      * Get the currently authenticated user.
-     *
-     * @return Authenticatable|null
      */
     public function user(): ?Authenticatable
     {
-        if (is_null($this->user)) {
-            return null;
-        }
-
         return $this->user;
     }
 
     /**
      * Get the ID for the currently authenticated user.
-     *
-     * @return string|null
      */
     public function id(): ?string
     {
-        if (!$this->hasUser()) {
-            return null;
-        }
-
-        return $this->user()->getAuthIdentifier();
+        return $this->user()?->getAuthIdentifier();
     }
 
     /**
      * Returns full decoded JWT token from authenticated user
-     *
-     * @return string|null
      */
     public function token(): ?string
     {
         return json_encode($this->decodedToken);
     }
 
-    /**
-     * Validate a user's credentials.
-     *
-     * @param array $credentials
-     * @return bool
-     */
     public function validate(array $credentials = []): bool
     {
-        if (!$user = $this->provider->retrieveByCredentials($credentials)) {
-            throw new UserNotFoundException("User not found. Credentials: " . json_encode($credentials));
-        }
+        $this->lastAttempted = $this->provider->retrieveByCredentials($credentials);
 
-        $this->setUser($user);
-
-        return true;
+        return ! empty($this->lastAttempted);
     }
 
     /**
      * Check if authenticated user has a specific privilege
-     * @param string $privilege
-     * @return bool
      */
     public function hasPrivilege(string $privilege): bool
     {
         $privileges = $this->getCustomClaimsTokenData('privileges', []);
+
         return in_array($privilege, $privileges);
     }
 }

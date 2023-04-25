@@ -13,15 +13,13 @@ class EnsureUserHasPrivilege
     /**
      * Handle an incoming request.
      *
-     * @param Request $request
      * @param Closure(Request): (Response) $next
-     * @param string $privilege
-     * @return Response
+     *
      * @throws AuthorizationException
      */
     public function handle(Request $request, Closure $next, string $privilege): Response
     {
-        if (!Auth::hasPrivilege($privilege)) {
+        if (! Auth::hasPrivilege($privilege)) {
             throw new AuthorizationException("You don't have the '$privilege' privilege.", 403);
         }
 

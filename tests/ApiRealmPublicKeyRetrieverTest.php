@@ -9,7 +9,6 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use KeycloakAuthGuard\Services\ApiRealmPublicKeyRetriever;
 
-
 class ApiRealmPublicKeyRetrieverTest extends TestCase
 {
     public function test_receiving_of_public_key()
@@ -31,6 +30,7 @@ class ApiRealmPublicKeyRetrieverTest extends TestCase
         ]);
 
         $handlerStack = HandlerStack::create($mock);
+
         return new Client(['handler' => $handlerStack]);
     }
 }

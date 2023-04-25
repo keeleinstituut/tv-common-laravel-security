@@ -6,5 +6,4 @@ use League\Config\Exception\InvalidConfigurationException;
 
 class InvalidJwtTokenPayloadException extends InvalidConfigurationException
 {
-
 }

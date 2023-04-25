@@ -10,30 +10,21 @@ class JwtToken
 {
     /**
      * Decode a JWT token
-     *
-     * @param string|null $token
-     * @param string $publicKey
-     * @param int $leeway
-     * @return stdClass|null
      */
-    public static function decode(string $token = null, string $publicKey = '', int $leeway = 0): ?stdClass
+    public static function decode(string $token, string $publicKey = '', int $leeway = 0): ?stdClass
     {
         JWT::$leeway = $leeway;
-        $publicKey = self::buildPublicKey($publicKey);
 
-        return $token ? JWT::decode($token, new Key($publicKey, 'RS256')) : null;
+        return JWT::decode($token, new Key(self::buildPublicKey($publicKey), 'RS256'));
     }
 
     /**
      * Build a valid public key from a string
-     *
-     * @param string $key
-     * @return string
      */
     private static function buildPublicKey(string $key): string
     {
-        return "-----BEGIN PUBLIC KEY-----\n" .
-            wordwrap($key, 64, "\n", true) .
+        return "-----BEGIN PUBLIC KEY-----\n".
+            wordwrap($key, 64, "\n", true).
             "\n-----END PUBLIC KEY-----";
     }
 }

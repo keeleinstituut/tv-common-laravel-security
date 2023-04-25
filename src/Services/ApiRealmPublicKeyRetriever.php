@@ -10,6 +10,7 @@ use RuntimeException;
 class ApiRealmPublicKeyRetriever implements RealmPublicKeyRetrieverInterface
 {
     private string $keycloakBaseUrl;
+
     private string $realm;
 
     public function __construct(private readonly ClientInterface $httpClient)
@@ -24,13 +25,13 @@ class ApiRealmPublicKeyRetriever implements RealmPublicKeyRetrieverInterface
             $response = $this->httpClient->request('GET', $this->getPublicKeyUrl());
 
             if ($response->getStatusCode() !== 200) {
-                throw new RuntimeException('Public key retrieval failed. The keycloak response status code is ' . $response->getStatusCode());
+                throw new RuntimeException('Public key retrieval failed. The keycloak response status code is '.$response->getStatusCode());
             }
 
             $responseJsonContent = $response->getBody()->getContents();
             $responseContent = json_decode($responseJsonContent, true);
 
-            if (!isset($responseContent['public_key'])) {
+            if (! isset($responseContent['public_key'])) {
                 throw new RuntimeException('Public key retrieval failed');
             }
 
