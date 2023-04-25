@@ -3,6 +3,7 @@
 namespace KeycloakAuthGuard;
 
 use GuzzleHttp\Client;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -12,7 +13,11 @@ use KeycloakAuthGuard\Middleware\EnsureUserHasPrivilege;
 use KeycloakAuthGuard\Services\ApiRealmPublicKeyRetriever;
 use KeycloakAuthGuard\Services\CachedRealmPublicKeyRetriever;
 use KeycloakAuthGuard\Services\ConfigRealmPublicKeyRetriever;
+use KeycloakAuthGuard\Services\Decoders\JwtTokenDecoder;
+use KeycloakAuthGuard\Services\Decoders\RequestBasedJwtTokenDecoder;
 use KeycloakAuthGuard\Services\RealmPublicKeyRetrieverInterface;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use UnexpectedValueException;
 
 class KeycloakAuthServiceProvider extends AuthServiceProvider
@@ -27,17 +32,29 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
         });
     }
 
+    /**
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     public function register()
     {
-        Auth::extend('keycloak', function ($app, $name, array $config) {
-            return new KeycloakGuard(
-                $this->getRealmPublicKeyRetriever(),
-                Auth::createUserProvider($config['provider']),
-                $app->request
+        $this->app->bind(RequestBasedJwtTokenDecoder::class, function (Application $app) {
+            return new RequestBasedJwtTokenDecoder(
+                new JwtTokenDecoder(
+                    $this->getRealmPublicKeyRetriever()
+                ),
+                $app->get('request')
             );
         });
 
-        $this->app['router']->aliasMiddleware('has-privilege', EnsureUserHasPrivilege::class);
+        Auth::extend('keycloak', function (Application $app, $name, array $config) {
+            return new KeycloakGuard(
+                $app->make(RequestBasedJwtTokenDecoder::class),
+                Auth::createUserProvider($config['provider']),
+            );
+        });
+
+        $this->app->get('router')->aliasMiddleware('has-privilege', EnsureUserHasPrivilege::class);
     }
 
     protected function getRealmPublicKeyRetriever(): RealmPublicKeyRetrieverInterface

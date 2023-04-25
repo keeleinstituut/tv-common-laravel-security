@@ -10,6 +10,8 @@ use KeycloakAuthGuard\Auth\JwtPayloadUserProvider;
 use KeycloakAuthGuard\Exceptions\InvalidJwtTokenException;
 use KeycloakAuthGuard\Models\JwtPayloadUser;
 use KeycloakAuthGuard\Services\ConfigRealmPublicKeyRetriever;
+use KeycloakAuthGuard\Services\Decoders\JwtTokenDecoder;
+use KeycloakAuthGuard\Services\Decoders\RequestBasedJwtTokenDecoder;
 
 class AuthenticateTest extends TestCase
 {
@@ -143,9 +145,13 @@ class AuthenticateTest extends TestCase
     {
         Auth::extend('keycloak', function ($app) {
             return new KeycloakGuard(
-                new ConfigRealmPublicKeyRetriever(),
+                new RequestBasedJwtTokenDecoder(
+                    new JwtTokenDecoder(
+                        new ConfigRealmPublicKeyRetriever
+                    ),
+                    $app->request
+                ),
                 new JwtPayloadUserProvider(JwtPayloadUser::class),
-                $app->request
             );
         });
 

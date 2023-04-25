@@ -2,17 +2,14 @@
 
 namespace KeycloakAuthGuard\Auth\Guards;
 
-use Exception;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use KeycloakAuthGuard\Auth\JwtPayloadUserProvider;
 use KeycloakAuthGuard\Exceptions\InvalidJwtTokenException;
-use KeycloakAuthGuard\JwtToken;
-use KeycloakAuthGuard\Services\RealmPublicKeyRetrieverInterface;
+use KeycloakAuthGuard\Services\Decoders\RequestBasedJwtTokenDecoder;
 use stdClass;
 
 class KeycloakGuard implements Guard
@@ -27,9 +24,8 @@ class KeycloakGuard implements Guard
     protected ?Authenticatable $lastAttempted;
 
     public function __construct(
-        private readonly RealmPublicKeyRetrieverInterface $publicKeyRetriever,
+        private readonly RequestBasedJwtTokenDecoder $decoder,
         private readonly UserProvider $provider,
-        private readonly Request $request
     ) {
         $this->user = null;
         $this->decodedToken = null;
@@ -43,41 +39,10 @@ class KeycloakGuard implements Guard
      */
     private function authenticate(): void
     {
-        if (! $token = $this->getTokenFromRequest()) {
-            return;
-        }
-
-        try {
-            $this->decodedToken = JwtToken::decode(
-                $token,
-                $this->publicKeyRetriever->getPublicKey(),
-                Config::get('keycloak.leeway')
-            );
-        } catch (Exception $e) {
-            throw new InvalidJwtTokenException('JWT token is invalid', 0, $e);
-        }
-
+        $this->decodedToken = $this->decoder->getDecodedJWT();
         if ($this->decodedToken && $this->validate($this->getUserCredentials())) {
             $this->setUser($this->lastAttempted);
         }
-    }
-
-    /**
-     * Get the token for the current request.
-     */
-    private function getTokenFromRequest(): string
-    {
-        if (! empty($this->request->bearerToken())) {
-            return $this->request->bearerToken();
-        }
-
-        if (! empty(Config::get('keycloak.input_key', ''))) {
-            return $this->request->input(
-                Config::get('keycloak.input_key')
-            );
-        }
-
-        return '';
     }
 
     /**
