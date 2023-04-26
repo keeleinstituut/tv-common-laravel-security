@@ -35,7 +35,8 @@
         "orchestra/testbench": "^8.3",
         "laravel/pint": "^1.9",
         "nunomaduro/collision": "^7.4",
-        "pestphp/pest": "^2.4"
+        "pestphp/pest": "^2.4",
+        "ext-openssl": "*"
     },
     "config": {
         "allow-plugins": {

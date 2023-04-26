@@ -2,13 +2,13 @@
 
 return [
     /*
-     * Keycloak Url. The param is used for fetching realm public key.
+     * Keycloak Url. The param is used for validation of issuer and fetching realm public key.
      * Format: https://your-server.com/auth
      */
     'base_url' => env('KEYCLOAK_BASE_URL', ''),
 
     /*
-     * Keycloak Realm. The param is used for fetching realm public key.
+     * Keycloak Realm. The param is used for validation of issuer and fetching realm public key.
      * Default is master
      */
     'realm' => env('KEYCLOAK_REALM', 'master'),
@@ -68,7 +68,13 @@ return [
      * By default this package **always** will look at first for a `Bearer` token.
      * Additionally, if this option is enabled, then it will try to get a token from this custom request param.
      */
-    'input_key' => env('KEYCLOAK_TOKEN_INPUT_KEY', null),
+    'input_key' => env('KEYCLOAK_TOKEN_INPUT_KEY'),
+
+    /*
+     * Define accepted authorized parties as list of acceptable values separated by the comma.
+     * Property is used for validation of JWT. Validation will be skipped if property is empty.
+     */
+    'accepted_authorized_parties' => env('ACCEPTED_AUTHORIZED_PARTIES', ''),
 
     /*
      * GuzzleHttp Client options

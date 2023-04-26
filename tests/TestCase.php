@@ -119,12 +119,12 @@ class TestCase extends Orchestra
         return str_replace('\n', '', $string);
     }
 
-    // Build a diferent token with custom payload
-    protected function buildCustomToken(array $payload): void
+    // Build a different token with custom payload
+    protected function buildCustomToken(array $payload, string $keyId = null): void
     {
         $payload = array_replace($this->payload, $payload);
 
-        $this->token = JWT::encode($payload, $this->privateKey, 'RS256');
+        $this->token = JWT::encode($payload, $this->privateKey, 'RS256', $keyId);
     }
 
     // Setup default token, for the default user

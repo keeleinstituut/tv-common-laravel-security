@@ -2,12 +2,14 @@
 
 namespace KeycloakAuthGuard\Services;
 
+use Firebase\JWT\JWK;
+use Firebase\JWT\Key;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Config;
 use RuntimeException;
 
-class ApiRealmPublicKeyRetriever implements RealmPublicKeyRetrieverInterface
+class ApiRealmJwkRetriever implements RealmJwkRetrieverInterface
 {
     private string $keycloakBaseUrl;
 
@@ -19,7 +21,12 @@ class ApiRealmPublicKeyRetriever implements RealmPublicKeyRetrieverInterface
         $this->realm = Config::get('keycloak.realm');
     }
 
-    public function getPublicKey(): string
+    public function getJwkOrJwks(): Key|array
+    {
+        return JWK::parseKeySet($this->getJwksAsArray());
+    }
+
+    public function getJwksAsArray(): array
     {
         try {
             $response = $this->httpClient->request('GET', $this->getPublicKeyUrl());
@@ -31,18 +38,18 @@ class ApiRealmPublicKeyRetriever implements RealmPublicKeyRetrieverInterface
             $responseJsonContent = $response->getBody()->getContents();
             $responseContent = json_decode($responseJsonContent, true);
 
-            if (! isset($responseContent['public_key'])) {
-                throw new RuntimeException('Public key retrieval failed');
+            if (! isset($responseContent['keys'])) {
+                throw new RuntimeException('Jwks retrieval failed');
             }
 
-            return $responseContent['public_key'];
+            return $responseContent;
         } catch (GuzzleException $e) {
-            throw new RuntimeException('Public key retrieval failed.', 0, $e);
+            throw new RuntimeException('Jwks retrieval failed.', 0, $e);
         }
     }
 
     private function getPublicKeyUrl(): string
     {
-        return "$this->keycloakBaseUrl/realms/$this->realm";
+        return "$this->keycloakBaseUrl/realms/$this->realm/protocol/openid-connect/certs";
     }
 }

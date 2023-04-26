@@ -80,16 +80,15 @@ Parameter defines the mode of how realm public key will be retrieved. Available 
 
 *  `KEYCLOAK_BASE_URL`
 
-*Required in case `REALM_PUBLIC_KEY_RETRIEVAL_MODE` equal to `api` or `cached-api`*
+*Required for validation and in case if `REALM_PUBLIC_KEY_RETRIEVAL_MODE` equal to `api` or `cached-api`*
 
 URL to keycloak. Format: https://your-keycloak-server.com/.
 
 *  `KEYCLOAK_REALM`
 
-*Required in case `REALM_PUBLIC_KEY_RETRIEVAL_MODE` equal to `api` or `cached-api`*
+*Required for validation and in case if `REALM_PUBLIC_KEY_RETRIEVAL_MODE` equal to `api` or `cached-api`*
 
 Name of the keycloak realm.
-
 
 *  `KEYCLOAK_REALM_PUBLIC_KEY`
 
