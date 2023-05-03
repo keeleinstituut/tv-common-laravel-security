@@ -20,28 +20,29 @@ class CachedRealmJwkRetriever implements RealmJwkRetrieverInterface
     /**
      * @throws InvalidArgumentException
      */
-    public function getJwkOrJwks(): Key|array
+    public function getJwkOrJwks(?string $kid = null): Key|array
     {
-        if ($this->repository->has($this->getCacheKey())) {
-            $jwks = $this->repository->get($this->getCacheKey());
+        if ($this->repository->has($this->getCacheKey($kid))) {
+            $jwks = $this->repository->get($this->getCacheKey($kid));
 
             return JWK::parseKeySet(json_decode($jwks));
         }
 
         $jwks = $this->apiRetriever->getJwksAsArray();
-
-        $this->repository->set(
-            $this->getCacheKey(),
-            json_encode($jwks),
-            $this->getCacheTTL()
-        );
+        foreach ($jwks['keys'] as $jwk) {
+            $this->repository->set(
+                $this->getCacheKey($jwk['kid']),
+                json_encode(['keys' => [$jwk]]),
+                $this->getCacheTTL()
+            );
+        }
 
         return JWK::parseKeySet($jwks);
     }
 
-    private function getCacheKey(): string
+    private function getCacheKey(?string $kid = null): string
     {
-        return "$this->realm-realm-jwks";
+        return "$this->realm-realm-jwk-$kid";
     }
 
     private function getCacheTTL(): int

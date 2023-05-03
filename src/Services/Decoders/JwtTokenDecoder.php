@@ -27,9 +27,10 @@ readonly class JwtTokenDecoder
     public function decode(string $token): ?stdClass
     {
         try {
+            $kid = JwtToken::getHeader($token)->kid ?? null;
             $token = JwtToken::decode(
                 $token,
-                $this->jwkRetriever->getJwkOrJwks(),
+                $this->jwkRetriever->getJwkOrJwks($kid),
                 Config::get('keycloak.leeway')
             );
         } catch (Exception $e) {

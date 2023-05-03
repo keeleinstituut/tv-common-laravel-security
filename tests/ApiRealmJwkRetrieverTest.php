@@ -27,7 +27,7 @@ class ApiRealmJwkRetrieverTest extends TestCase
         );
 
         /** @var CachedKeySet $publicKeySet */
-        $keySet = $retriever->getJwkOrJwks();
+        $keySet = $retriever->getJwkOrJwks($keyId);
         $this->assertArrayHasKey($keyId, $keySet);
 
         $this->buildCustomToken([

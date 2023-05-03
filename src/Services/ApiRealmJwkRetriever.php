@@ -21,9 +21,20 @@ class ApiRealmJwkRetriever implements RealmJwkRetrieverInterface
         $this->realm = Config::get('keycloak.realm');
     }
 
-    public function getJwkOrJwks(): Key|array
+    public function getJwkOrJwks(?string $kid = null): Key|array
     {
-        return JWK::parseKeySet($this->getJwksAsArray());
+        if (empty($kid)) {
+            return JWK::parseKeySet($this->getJwksAsArray());
+        }
+
+        $jwks = $this->getJwksAsArray();
+        foreach ($jwks['keys'] as $jwk) {
+            if ($jwk['kid'] === $kid) {
+                return JWK::parseKeySet(['keys' => [$jwk]]);
+            }
+        }
+
+        throw new RuntimeException("jwk not found for the ID: $kid");
     }
 
     public function getJwksAsArray(): array
