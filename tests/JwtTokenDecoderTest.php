@@ -2,6 +2,7 @@
 
 namespace KeycloakAuthGuard\Tests;
 
+use Illuminate\Support\Facades\Config;
 use KeycloakAuthGuard\Exceptions\InvalidJwtTokenException;
 use KeycloakAuthGuard\Services\ConfigRealmJwkRetriever;
 use KeycloakAuthGuard\Services\Decoders\JwtTokenDecoder;
@@ -17,6 +18,7 @@ class JwtTokenDecoderTest extends TestCase
             'realm' => 'master',
             'accepted_authorized_parties' => 'tolkevarav-web-dev,tolkevarav-web-dev1',
             'realm_public_key' => $this->plainPublicKey(),
+            'leeway' => 10
         ]);
     }
 
@@ -87,6 +89,24 @@ class JwtTokenDecoderTest extends TestCase
             'custom-claim-key' => 'custom-claim-value',
             'iss' => 'http://invalid.issuer',
             'azp' => 'tolkevarav-web-dev',
+        ]);
+
+        $decoder = new JwtTokenDecoder(
+            new ConfigRealmJwkRetriever()
+        );
+
+        $decoder->decode($this->token);
+    }
+
+    public function test_invalid_expiry()
+    {
+        $this->expectException(InvalidJwtTokenException::class);
+
+        $this->buildCustomToken([
+            'custom-claim-key' => 'custom-claim-value',
+            'iss' => 'http://localhost/realms/master',
+            'azp' => 'tolkevarav-web-dev',
+            'exp' => time() - Config::get('keycloak.leeway')
         ]);
 
         $decoder = new JwtTokenDecoder(
