@@ -40,7 +40,7 @@ class ApiRealmJwkRetriever implements RealmJwkRetrieverInterface
     public function getJwksAsArray(): array
     {
         try {
-            $response = $this->httpClient->request('GET', $this->getPublicKeyUrl());
+            $response = $this->httpClient->request('GET', $this->getJwksUrl());
 
             if ($response->getStatusCode() !== 200) {
                 throw new RuntimeException('Public key retrieval failed. The keycloak response status code is '.$response->getStatusCode());
@@ -59,7 +59,7 @@ class ApiRealmJwkRetriever implements RealmJwkRetrieverInterface
         }
     }
 
-    private function getPublicKeyUrl(): string
+    private function getJwksUrl(): string
     {
         return "$this->keycloakBaseUrl/realms/$this->realm/protocol/openid-connect/certs";
     }
