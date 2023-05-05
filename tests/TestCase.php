@@ -53,6 +53,8 @@ class TestCase extends Orchestra
         $this->publicKey = openssl_pkey_get_details($this->privateKey)['key'];
 
         $this->payload = [
+            'azp' => 'tolkevarav-web-dev',
+            'iss' => 'http://localhost/realms/master',
             'tolkevarav' => [
                 'personalIdentityCode' => '3430717934355',
             ],
@@ -76,6 +78,9 @@ class TestCase extends Orchestra
             'realm_public_key' => $this->plainPublicKey(),
             'jwt_payload_custom_claims_attribute' => 'tolkevarav',
             'realm_public_key_retrieval_mode' => 'config',
+            'base_url' => 'http://localhost',
+            'realm' => 'master',
+            'accepted_authorized_parties' => 'tolkevarav-web-dev',
         ]);
     }
 

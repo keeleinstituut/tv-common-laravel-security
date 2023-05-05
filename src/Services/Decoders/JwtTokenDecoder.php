@@ -26,6 +26,14 @@ readonly class JwtTokenDecoder
      */
     public function decode(string $token): ?stdClass
     {
+        return $this->decodeWithSpecifiedValidation($token, true, true);
+    }
+
+    /**
+     * @throws InvalidJwtTokenException
+     */
+    public function decodeWithSpecifiedValidation(string $token, bool $validateAzp, bool $validateIss): ?stdClass
+    {
         try {
             $kid = JwtToken::getHeader($token)->kid ?? null;
             $token = JwtToken::decode(
@@ -41,7 +49,7 @@ readonly class JwtTokenDecoder
             return null;
         }
 
-        $this->validate($token);
+        $this->validate($token, $validateAzp, $validateIss);
 
         return $token;
     }
@@ -49,9 +57,9 @@ readonly class JwtTokenDecoder
     /**
      * @throws InvalidJwtTokenException
      */
-    private function validate(stdClass $token): void
+    private function validate(stdClass $token, bool $validateAzp, bool $validateIss): void
     {
-        if (! empty(Config::get('keycloak.accepted_authorized_parties', ''))) {
+        if ($validateAzp) {
             $acceptedAuthorizedParties = explode(',', Config::get('keycloak.accepted_authorized_parties'));
             if (! property_exists($token, 'azp')) {
                 throw new InvalidJwtTokenException("Token 'azp' is not defined");
@@ -62,7 +70,7 @@ readonly class JwtTokenDecoder
             }
         }
 
-        if ($this->hasDefinedIssuer()) {
+        if ($validateIss) {
             if (! property_exists($token, 'iss')) {
                 throw new InvalidJwtTokenException("Token 'iss' is not defined");
             }
@@ -76,10 +84,5 @@ readonly class JwtTokenDecoder
     private function getExpectedIssuer(): string
     {
         return "$this->keycloakBaseUrl/realms/$this->realm";
-    }
-
-    private function hasDefinedIssuer(): bool
-    {
-        return ! empty($this->keycloakBaseUrl) && ! empty($this->realm);
     }
 }
