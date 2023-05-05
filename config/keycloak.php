@@ -26,13 +26,13 @@ return [
      * realm public key. This can be the name of any store that is
      * configured in app/config/cache.php
      */
-    'realm_public_key_cache_store' => env('REALM_PUBLIC_KEY_CACHE_DRIVER', 'redis'),
+    'realm_public_key_cache_store' => env('REALM_PUBLIC_KEY_CACHE_DRIVER', config('cache.default')),
 
     /*
      * Define static realm public key. To use it, you have to set up
      * KeycloakGuard with ConfigRealmPublicKeyRetriever.
      */
-    'realm_public_key' => env('KEYCLOAK_REALM_PUBLIC_KEY', null),
+    'realm_public_key' => env('KEYCLOAK_REALM_PUBLIC_KEY'),
 
     /*
      * Define the TTL for realm_public_key.

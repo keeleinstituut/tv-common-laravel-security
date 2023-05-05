@@ -18,7 +18,7 @@ class JwtTokenDecoderTest extends TestCase
             'realm' => 'master',
             'accepted_authorized_parties' => 'tolkevarav-web-dev,tolkevarav-web-dev1',
             'realm_public_key' => $this->plainPublicKey(),
-            'leeway' => 10
+            'leeway' => 10,
         ]);
     }
 
@@ -106,7 +106,7 @@ class JwtTokenDecoderTest extends TestCase
             'custom-claim-key' => 'custom-claim-value',
             'iss' => 'http://localhost/realms/master',
             'azp' => 'tolkevarav-web-dev',
-            'exp' => time() - Config::get('keycloak.leeway')
+            'exp' => time() - Config::get('keycloak.leeway'),
         ]);
 
         $decoder = new JwtTokenDecoder(
