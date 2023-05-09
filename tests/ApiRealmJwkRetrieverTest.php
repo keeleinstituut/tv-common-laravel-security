@@ -32,7 +32,7 @@ class ApiRealmJwkRetrieverTest extends TestCase
 
         $this->buildCustomToken([
             'tolkevarav' => [
-                'personalIdentityCode' => 'some_code',
+                'personalIdentificationCode' => 'some_code',
             ],
         ], $keyId);
         $decodedToken = JWT::decode($this->token, $keySet);

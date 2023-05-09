@@ -10,7 +10,7 @@ readonly class JwtPayloadUser implements Authenticatable
 {
     public string $id;
 
-    public string $personalIdentityCode;
+    public string $personalIdentificationCode;
 
     public string $institutionUserId;
 
@@ -27,7 +27,7 @@ readonly class JwtPayloadUser implements Authenticatable
     public function __construct(array $jwtPayloadData)
     {
         $this->id = $jwtPayloadData['userId'] ?? '';
-        $this->personalIdentityCode = $jwtPayloadData['personalIdentityCode'] ?? '';
+        $this->personalIdentificationCode = $jwtPayloadData['personalIdentificationCode'] ?? '';
         $this->forename = $jwtPayloadData['forename'] ?? '';
         $this->surname = $jwtPayloadData['surname'] ?? '';
         $this->privileges = $jwtPayloadData['privileges'] ?? [];
@@ -36,7 +36,7 @@ readonly class JwtPayloadUser implements Authenticatable
         $this->institutionId = $jwtPayloadData['selectedInstitution']['id'] ?? '';
         $this->institutionName = $jwtPayloadData['selectedInstitution']['name'] ?? '';
 
-        if (empty($this->id) || empty($this->personalIdentityCode)) {
+        if (empty($this->id) || empty($this->personalIdentificationCode)) {
             throw new InvalidJwtTokenPayloadException('JWT token payload structure not match with configured user model');
         }
     }
