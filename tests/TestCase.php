@@ -56,7 +56,7 @@ class TestCase extends Orchestra
             'azp' => 'tolkevarav-web-dev',
             'iss' => 'http://localhost/realms/master',
             'tolkevarav' => [
-                'personalIdentityCode' => '3430717934355',
+                'personalIdentificationCode' => '3430717934355',
             ],
         ];
 

@@ -70,7 +70,7 @@ class AuthenticateTest extends TestCase
 
         $this->buildCustomToken([
             'tolkevarav' => [
-                'personalIdentityCode' => 'some_code',
+                'personalIdentificationCode' => 'some_code',
             ],
         ]);
 
@@ -81,7 +81,7 @@ class AuthenticateTest extends TestCase
     {
         $this->buildCustomToken([
             'tolkevarav' => [
-                'personalIdentityCode' => '3430717934355',
+                'personalIdentificationCode' => '3430717934355',
                 'privileges' => [
                     'ADD_ROLE',
                 ],
@@ -96,7 +96,7 @@ class AuthenticateTest extends TestCase
     {
         $this->buildCustomToken([
             'tolkevarav' => [
-                'personalIdentityCode' => '3430717934355',
+                'personalIdentificationCode' => '3430717934355',
                 'privileges' => [
                     'access_to_super_secret',
                 ],
@@ -112,7 +112,7 @@ class AuthenticateTest extends TestCase
     {
         $this->buildCustomToken([
             'tolkevarav' => [
-                'personalIdentityCode' => '3430717934355',
+                'personalIdentificationCode' => '3430717934355',
                 'privileges' => [
                     'not_so_secret',
                 ],
@@ -127,7 +127,7 @@ class AuthenticateTest extends TestCase
     {
         $this->buildCustomToken([
             'tolkevarav' => [
-                'personalIdentityCode' => '3430717934355',
+                'personalIdentificationCode' => '3430717934355',
                 'privileges' => [
                     'ADD_ROLE',
                 ],
@@ -157,7 +157,7 @@ class AuthenticateTest extends TestCase
 
         $this->buildCustomToken([
             'tolkevarav' => [
-                'personalIdentityCode' => '3430717934355',
+                'personalIdentificationCode' => '3430717934355',
                 'userId' => '2ad53f6d-b876-4855-ae67-5d29b126c214',
                 'institutionUserId' => 'e1057c3e-661f-4a23-8243-e770cb56bcb8',
                 'forename' => 'Forename',
@@ -185,7 +185,7 @@ class AuthenticateTest extends TestCase
         $this->buildCustomToken([
             'iat' => time() + 30,   // time ahead in the future
             'tolkevarav' => [
-                'personalIdentityCode' => '3430717934355',
+                'personalIdentificationCode' => '3430717934355',
             ],
         ]);
 
@@ -200,7 +200,7 @@ class AuthenticateTest extends TestCase
         $this->buildCustomToken([
             'iat' => time() + 30, // time ahead in the future
             'tolkevarav' => [
-                'personalIdentityCode' => '3430717934355',
+                'personalIdentificationCode' => '3430717934355',
             ],
         ]);
 
