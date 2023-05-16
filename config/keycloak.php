@@ -80,5 +80,5 @@ return [
      * GuzzleHttp Client options
      * @link http://docs.guzzlephp.org/en/stable/request-options.html
      */
-    'guzzle_options' => json_decode(env('ACCEPTED_AUTHORIZED_PARTIES', '{}'), true),
+    'guzzle_options' => json_decode(env('GUZZLE_OPTIONS', '{}'), true),
 ];
