@@ -25,7 +25,7 @@ class CachedRealmJwkRetriever implements RealmJwkRetrieverInterface
         if ($this->repository->has($this->getCacheKey($kid))) {
             $jwks = $this->repository->get($this->getCacheKey($kid));
 
-            return JWK::parseKeySet(json_decode($jwks));
+            return JWK::parseKeySet(json_decode($jwks, true));
         }
 
         $jwks = $this->apiRetriever->getJwksAsArray();
