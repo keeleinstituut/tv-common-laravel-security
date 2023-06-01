@@ -78,13 +78,13 @@ return [
 
     /*
      * Keycloak client ID that will be used retrieve the JWT token of service account.
-     * The service account is needed to access protected endpoints of other services.
+     * The service account is needed to access sync endpoints of other services.
      */
     'service_account_client_id' => env('KEYCLOAK_SERVICE_ACCOUNT_CLIENT_ID', ''),
 
     /*
      * Keycloak client secret that will be used retrieve the JWT token of service account.
-     * The service account is needed to access protected endpoints of other services.
+     * The service account is needed to access sync endpoints of other services.
      */
     'service_account_client_secret' => env('KEYCLOAK_SERVICE_ACCOUNT_CLIENT_SECRET', ''),
 
