@@ -5,6 +5,7 @@ namespace KeycloakAuthGuard\Middleware;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use KeycloakAuthGuard\Services\Decoders\RequestBasedJwtTokenDecoder;
 use stdClass;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,7 +34,7 @@ readonly class EnsureJwtBelongsToServiceAccountWithSyncRole
 
         abort_if(empty($decodedJwt), 401);
 
-        return $this->hasSyncRole($decodedJwt);
+        return $this->hasValidServiceAccountAzp($decodedJwt) && $this->hasSyncRole($decodedJwt);
     }
 
     private function hasSyncRole(stdClass $decodedJwt): bool
@@ -43,5 +44,19 @@ readonly class EnsureJwtBelongsToServiceAccountWithSyncRole
             && is_array($decodedJwt->realm_access->roles)
             && filled(config('keycloak.service_account_sync_role'))
             && in_array(config('keycloak.service_account_sync_role'), $decodedJwt->realm_access->roles);
+    }
+
+    private function hasValidServiceAccountAzp(stdClass $decodedJwt): bool
+    {
+        if (! property_exists($decodedJwt, 'azp')) {
+            return false;
+        }
+
+        $acceptedAuthorizedParties = explode(',', Config::get('keycloak.service_accounts_accepted_authorized_parties'));
+        if (! in_array($decodedJwt->azp, $acceptedAuthorizedParties)) {
+            return false;
+        }
+
+        return true;
     }
 }

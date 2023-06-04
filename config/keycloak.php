@@ -94,6 +94,12 @@ return [
     'service_account_sync_role' => env('KEYCLOAK_SERVICE_ACCOUNT_SYNC_ROLE', ''),
 
     /*
+     * Define accepted authorized parties as list of acceptable values separated by the comma.
+     * Property is used for validation of JWT. Validation will be skipped if property is empty.
+     */
+    'service_accounts_accepted_authorized_parties' => env('SERVICE_ACCOUNTS_ACCEPTED_AUTHORIZED_PARTIES', ''),
+
+    /*
      * GuzzleHttp Client options
      * @link http://docs.guzzlephp.org/en/stable/request-options.html
      */
