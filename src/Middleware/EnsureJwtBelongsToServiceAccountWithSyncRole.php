@@ -33,7 +33,7 @@ readonly class EnsureJwtBelongsToServiceAccountWithSyncRole
 
         abort_if(empty($decodedJwt), 401);
 
-        return $this->hasValidServiceAccountAzp($decodedJwt) && $this->hasSyncRole($decodedJwt);
+        return $this->hasSyncRole($decodedJwt);
     }
 
     private function hasSyncRole(stdClass $decodedJwt): bool
@@ -43,19 +43,5 @@ readonly class EnsureJwtBelongsToServiceAccountWithSyncRole
             && is_array($decodedJwt->realm_access->roles)
             && filled(config('keycloak.service_account_sync_role'))
             && in_array(config('keycloak.service_account_sync_role'), $decodedJwt->realm_access->roles);
-    }
-
-    private function hasValidServiceAccountAzp(stdClass $decodedJwt): bool
-    {
-        if (! property_exists($decodedJwt, 'azp')) {
-            return false;
-        }
-
-        $acceptedAuthorizedParties = explode(',', config('keycloak.service_accounts_accepted_authorized_parties'));
-        if (! in_array($decodedJwt->azp, $acceptedAuthorizedParties)) {
-            return false;
-        }
-
-        return true;
     }
 }
