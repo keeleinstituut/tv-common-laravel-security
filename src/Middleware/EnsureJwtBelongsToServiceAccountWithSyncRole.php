@@ -5,7 +5,6 @@ namespace KeycloakAuthGuard\Middleware;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use KeycloakAuthGuard\Services\Decoders\RequestBasedJwtTokenDecoder;
 use stdClass;
 use Symfony\Component\HttpFoundation\Response;
@@ -52,7 +51,7 @@ readonly class EnsureJwtBelongsToServiceAccountWithSyncRole
             return false;
         }
 
-        $acceptedAuthorizedParties = explode(',', Config::get('keycloak.service_accounts_accepted_authorized_parties'));
+        $acceptedAuthorizedParties = explode(',', config('keycloak.service_accounts_accepted_authorized_parties'));
         if (! in_array($decodedJwt->azp, $acceptedAuthorizedParties)) {
             return false;
         }

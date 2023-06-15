@@ -6,7 +6,6 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Config;
 use KeycloakAuthGuard\Auth\JwtPayloadUserProvider;
 use KeycloakAuthGuard\Exceptions\InvalidJwtTokenException;
 use KeycloakAuthGuard\Services\Decoders\RequestBasedJwtTokenDecoder;
@@ -55,13 +54,13 @@ class KeycloakGuard implements Guard
         }
 
         return [
-            Config::get('keycloak.user_provider_credential') => $this->getTokenPayloadData(Config::get('keycloak.token_principal_attribute')),
+            config('keycloak.user_provider_credential') => $this->getTokenPayloadData(config('keycloak.token_principal_attribute')),
         ];
     }
 
     private function getCustomClaimsTokenData(string $key = null, mixed $default = null): mixed
     {
-        $customClaimsKey = Config::get('keycloak.jwt_payload_custom_claims_attribute');
+        $customClaimsKey = config('keycloak.jwt_payload_custom_claims_attribute');
         $customClaimsTokenData = $this->getTokenPayloadData($customClaimsKey, []);
 
         if (empty($key)) {

@@ -3,10 +3,10 @@
 namespace KeycloakAuthGuard;
 
 use GuzzleHttp\Client;
+use Illuminate\Cache\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Config;
 use KeycloakAuthGuard\Auth\Guards\KeycloakGuard;
 use KeycloakAuthGuard\Auth\JwtPayloadUserProvider;
 use KeycloakAuthGuard\Middleware\EnsureJwtBelongsToServiceAccountWithSyncRole;
@@ -54,10 +54,13 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
         $this->app->bind(ServiceAccountJwtRetrieverInterface::class, function (Application $app) {
             return new CachedServiceAccountJwtRetriever(
                 new ServiceAccountJwtRetriever(
-                    Config::get('keycloak.service_account_client_id'),
-                    Config::get('keycloak.service_account_client_secret')
+                    config('keycloak.service_account_client_id'),
+                    config('keycloak.service_account_client_secret')
                 ),
-                $app->get('cache')->store(Config::get('keycloak.cache_store'))
+                new JwtTokenDecoder(
+                    $this->getRealmPublicKeyRetriever()
+                ),
+                $this->getCacheRepository()
             );
         });
 
@@ -77,20 +80,25 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
 
     protected function getRealmPublicKeyRetriever(): RealmJwkRetrieverInterface
     {
-        $mode = Config::get('keycloak.realm_public_key_retrieval_mode');
+        $mode = config('keycloak.realm_public_key_retrieval_mode');
 
         return match ($mode) {
             'api' => new ApiRealmJwkRetriever(
-                new Client(Config::get('keycloak.guzzle_options', []))
+                new Client(config('keycloak.guzzle_options', []))
             ),
             'cached-api' => new CachedRealmJwkRetriever(
                 new ApiRealmJwkRetriever(
-                    new Client(Config::get('keycloak.guzzle_options', []))
+                    new Client(config('keycloak.guzzle_options', []))
                 ),
-                app('cache')->store(Config::get('keycloak.cache_store'))
+                $this->getCacheRepository()
             ),
             'config' => new ConfigRealmJwkRetriever(),
             default => throw new UnexpectedValueException("Unsupported value for realm_public_key_retrieval_mode: $mode")
         };
+    }
+
+    protected function getCacheRepository(): Repository
+    {
+        return app('cache')->store(config('keycloak.cache_store'));
     }
 }

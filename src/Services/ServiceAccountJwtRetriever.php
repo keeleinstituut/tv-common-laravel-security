@@ -3,7 +3,6 @@
 namespace KeycloakAuthGuard\Services;
 
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 
 readonly class ServiceAccountJwtRetriever implements ServiceAccountJwtRetrieverInterface
@@ -14,8 +13,8 @@ readonly class ServiceAccountJwtRetriever implements ServiceAccountJwtRetrieverI
 
     public function __construct(private string $clientId, private string $clientSecret)
     {
-        $this->keycloakBaseUrl = trim(Config::get('keycloak.base_url'), '/');
-        $this->realm = Config::get('keycloak.realm');
+        $this->keycloakBaseUrl = trim(config('keycloak.base_url'), '/');
+        $this->realm = config('keycloak.realm');
     }
 
     /**
@@ -23,13 +22,13 @@ readonly class ServiceAccountJwtRetriever implements ServiceAccountJwtRetrieverI
      */
     public function getJwt(): string
     {
-        return $this->getResponse()['access_token'];
+        return $this->sendClientCredentialsGrantRequest()['access_token'];
     }
 
     /**
      * @throws RequestException
      */
-    public function getResponse(): array
+    public function sendClientCredentialsGrantRequest(): array
     {
         return Http::asForm()->post($this->getJwtRetrieveUrl(), [
             'grant_type' => 'client_credentials',

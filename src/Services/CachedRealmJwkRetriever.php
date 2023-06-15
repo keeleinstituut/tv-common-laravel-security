@@ -5,7 +5,6 @@ namespace KeycloakAuthGuard\Services;
 use Firebase\JWT\JWK;
 use Firebase\JWT\Key;
 use Illuminate\Cache\Repository;
-use Illuminate\Support\Facades\Config;
 use Psr\SimpleCache\InvalidArgumentException;
 
 class CachedRealmJwkRetriever implements RealmJwkRetrieverInterface
@@ -14,7 +13,7 @@ class CachedRealmJwkRetriever implements RealmJwkRetrieverInterface
 
     public function __construct(private readonly ApiRealmJwkRetriever $apiRetriever, private readonly Repository $repository)
     {
-        $this->realm = Config::get('keycloak.realm');
+        $this->realm = config('keycloak.realm');
     }
 
     /**
@@ -47,6 +46,6 @@ class CachedRealmJwkRetriever implements RealmJwkRetrieverInterface
 
     private function getCacheTTL(): int
     {
-        return Config::get('keycloak.realm_public_key_cache_ttl');
+        return config('keycloak.realm_public_key_cache_ttl');
     }
 }

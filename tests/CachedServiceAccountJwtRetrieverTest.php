@@ -5,38 +5,99 @@ namespace KeycloakAuthGuard\Tests;
 use Illuminate\Cache\Repository;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use KeycloakAuthGuard\Exceptions\InvalidJwtTokenException;
+use KeycloakAuthGuard\Exceptions\TooShortJwtLifetimeException;
 use KeycloakAuthGuard\Services\CachedServiceAccountJwtRetriever;
+use KeycloakAuthGuard\Services\ConfigRealmJwkRetriever;
+use KeycloakAuthGuard\Services\Decoders\JwtTokenDecoder;
 use KeycloakAuthGuard\Services\ServiceAccountJwtRetriever;
 use Psr\SimpleCache\InvalidArgumentException;
+use RuntimeException;
 
 class CachedServiceAccountJwtRetrieverTest extends TestCase
 {
+    protected function defineEnvironment($app): void
+    {
+        parent::defineEnvironment($app);
+
+        $app['config']->set('keycloak', [
+            'base_url' => 'http://localhost',
+            'realm' => 'master',
+            'accepted_authorized_parties' => 'tolkevarav-web-dev,tolkevarav-web-dev1',
+            'service_account_jwt_cache_expiry_delay' => 10,
+            'realm_public_key' => $this->plainPublicKey(),
+        ]);
+    }
+
     /**
      * @throws RequestException
      * @throws InvalidArgumentException
      */
-    public function test_receiving_of_service_account_jwt()
+    public function test_receiving_and_caching_of_service_account_jwt()
     {
-        Http::fake(fn () => Http::response($this->responseWithJwt()));
+        Http::fake(fn() => Http::response($this->getServiceAccountObtainJwtResponse()));
 
-        /** @var Repository $cacheStorage */
-        $cacheStorage = app('cache')->store('array');
-        $retriever = new CachedServiceAccountJwtRetriever(
-            new ServiceAccountJwtRetriever('', ''),
-            $cacheStorage
-        );
+        $retriever = $this->getJwtRetriever();
         $jwt = $retriever->getJwt();
 
-        $this->assertEquals($this->responseWithJwt()['access_token'], $jwt);
+        $cacheStorage = $this->getCacheRepository();
+        $this->assertEquals($this->getServiceAccountObtainJwtResponse()['access_token'], $jwt);
         $this->assertTrue($cacheStorage->has($retriever->getCacheKey()));
         $this->assertEquals($cacheStorage->get($retriever->getCacheKey()), $jwt);
     }
 
-    private function responseWithJwt(): array
+    /**
+     * @throws RequestException
+     * @throws InvalidArgumentException
+     */
+    public function test_caching_of_service_account_jwt_that_will_expire_soon()
     {
+        $cacheExpiryDelay = config('keycloak.service_account_jwt_cache_expiry_delay') - 1;
+        Http::fake(fn() => Http::response($this->getServiceAccountObtainJwtResponse($cacheExpiryDelay)));
+        $this->expectException(TooShortJwtLifetimeException::class);
+        $this->getJwtRetriever()->getJwt();
+    }
+
+    /**
+     * @throws RequestException
+     * @throws InvalidArgumentException
+     */
+    public function test_caching_of_service_account_without_exp_claim()
+    {
+        $this->buildCustomToken([]);
+        Http::fake(fn() => Http::response([
+            'access_token' => $this->token,
+            'expires_in' => 300,
+        ]));
+        $this->expectException(InvalidJwtTokenException::class);
+        $this->getJwtRetriever()->getJwt();
+    }
+
+    private function getJwtRetriever(): CachedServiceAccountJwtRetriever
+    {
+        return new CachedServiceAccountJwtRetriever(
+            new ServiceAccountJwtRetriever('', ''),
+            new JwtTokenDecoder(
+                new ConfigRealmJwkRetriever()
+            ),
+            $this->getCacheRepository()
+        );
+    }
+
+    private function getServiceAccountObtainJwtResponse(int $expiresIn = 100): array
+    {
+        $this->buildCustomToken([
+            'exp' => time() + $expiresIn,
+        ]);
+
         return [
-            'access_token' => 'eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJjc2ZMMllPbFhLVWRiR18yV1AwVjQwX21Uc1VCUjdpN1pKRU1pa2hUdnNFIn0.eyJleHAiOjE2ODU0NDQyMDUsImlhdCI6MTY4NTQ0MzkwNSwianRpIjoiOWZiZjhjMjMtOWVhMC00MTIxLWE5NGMtNzA2ZGZiYmExNWRkIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy90b2xrZXZhcmF2LWRldiIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiIxZTIyMDdiMy1jZWY0LTQyOTQtOTg4NC0yZjE1NDk4YzJiNzIiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJkZW1vYXBwIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIvKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJkZWZhdWx0LXJvbGVzLXRvbGtldmFyYXYtZGV2IiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudEhvc3QiOiIxNzIuMTcuMC4xIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWRlbW9hcHAiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE3LjAuMSIsImNsaWVudF9pZCI6ImRlbW9hcHAifQ.PccmNCJ_6xKFtqfIdzEARi83LAhu2HlF7MuwnDrb8xK9R-lkc5rW3bwZh1vyp9kmMM76BumMiiOO5dT6_ENk6Cabc4iXbg4Dn58URU5ZEEidE-a28vLB5GhXBQRidEvMKyfd8dAaOC1XTlXgmVvTObswoL1faMz07VTQVaZvdLR2xZiCDk_GYo0PWH4bsRsZGoR7_a1RyudRS0pL-6sSwhBcIgSMociFu2edrHRIfrRtgvcHYvWuk5ZhSgwcSLbZY_U4k7aoVTx8jT3iuciO_2BzJnLxeGtP_fONynHygVEeWyFjvugyzlGU6zkge16D-1jBktt4xb-GLMwKy_9YjQ',
+            'access_token' => $this->token,
             'expires_in' => 300,
         ];
+    }
+
+    private function getCacheRepository(): Repository
+    {
+        return app('cache')->store('array');
     }
 }
