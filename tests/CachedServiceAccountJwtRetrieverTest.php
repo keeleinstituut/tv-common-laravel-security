@@ -36,7 +36,6 @@ class CachedServiceAccountJwtRetrieverTest extends TestCase
     public function test_receiving_and_caching_of_service_account_jwt()
     {
         Http::fake(fn() => Http::response($this->getServiceAccountObtainJwtResponse()));
-
         $retriever = $this->getJwtRetriever();
         $jwt = $retriever->getJwt();
 
@@ -44,6 +43,8 @@ class CachedServiceAccountJwtRetrieverTest extends TestCase
         $this->assertEquals($this->getServiceAccountObtainJwtResponse()['access_token'], $jwt);
         $this->assertTrue($cacheStorage->has($retriever->getCacheKey()));
         $this->assertEquals($cacheStorage->get($retriever->getCacheKey()), $jwt);
+        $this->assertEquals($jwt, $retriever->getJwt());
+        Http::assertSentCount(1);
     }
 
     /**
