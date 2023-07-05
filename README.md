@@ -145,7 +145,7 @@ The property from JWT token that contains the user metadata. In case of usage `K
 *Default is `86400`.*
 Cache TTL for storing realm public key.
 
-*  `REALM_PUBLIC_KEY_CACHE_DRIVER`
+*  `KEYCLOAK_CACHE_DRIVER`
 
 *Default is `redis`.*
 name of the driver from app `config/cache.php` that will be used for storing the realm public key. 

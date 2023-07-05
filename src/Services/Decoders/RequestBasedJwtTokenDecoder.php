@@ -3,7 +3,6 @@
 namespace KeycloakAuthGuard\Services\Decoders;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use stdClass;
 
 readonly class RequestBasedJwtTokenDecoder
@@ -37,9 +36,9 @@ readonly class RequestBasedJwtTokenDecoder
             return $this->request->bearerToken();
         }
 
-        if (! empty(Config::get('keycloak.input_key', ''))) {
+        if (! empty(config('keycloak.input_key', ''))) {
             return $this->request->input(
-                Config::get('keycloak.input_key')
+                config('keycloak.input_key')
             );
         }
 

@@ -6,7 +6,6 @@ use Firebase\JWT\JWK;
 use Firebase\JWT\Key;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
-use Illuminate\Support\Facades\Config;
 use RuntimeException;
 
 class ApiRealmJwkRetriever implements RealmJwkRetrieverInterface
@@ -17,8 +16,8 @@ class ApiRealmJwkRetriever implements RealmJwkRetrieverInterface
 
     public function __construct(private readonly ClientInterface $httpClient)
     {
-        $this->keycloakBaseUrl = trim(Config::get('keycloak.base_url'), '/');
-        $this->realm = Config::get('keycloak.realm');
+        $this->keycloakBaseUrl = trim(config('keycloak.base_url'), '/');
+        $this->realm = config('keycloak.realm');
     }
 
     public function getJwkOrJwks(?string $kid = null): Key|array

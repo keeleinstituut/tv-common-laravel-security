@@ -3,19 +3,23 @@
 namespace KeycloakAuthGuard;
 
 use GuzzleHttp\Client;
+use Illuminate\Cache\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Config;
 use KeycloakAuthGuard\Auth\Guards\KeycloakGuard;
 use KeycloakAuthGuard\Auth\JwtPayloadUserProvider;
+use KeycloakAuthGuard\Middleware\EnsureJwtBelongsToServiceAccountWithSyncRole;
 use KeycloakAuthGuard\Middleware\EnsureUserHasPrivilege;
 use KeycloakAuthGuard\Services\ApiRealmJwkRetriever;
 use KeycloakAuthGuard\Services\CachedRealmJwkRetriever;
+use KeycloakAuthGuard\Services\CachedServiceAccountJwtRetriever;
 use KeycloakAuthGuard\Services\ConfigRealmJwkRetriever;
 use KeycloakAuthGuard\Services\Decoders\JwtTokenDecoder;
 use KeycloakAuthGuard\Services\Decoders\RequestBasedJwtTokenDecoder;
 use KeycloakAuthGuard\Services\RealmJwkRetrieverInterface;
+use KeycloakAuthGuard\Services\ServiceAccountJwtRetriever;
+use KeycloakAuthGuard\Services\ServiceAccountJwtRetrieverInterface;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use UnexpectedValueException;
@@ -47,6 +51,19 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
             );
         });
 
+        $this->app->bind(ServiceAccountJwtRetrieverInterface::class, function (Application $app) {
+            return new CachedServiceAccountJwtRetriever(
+                new ServiceAccountJwtRetriever(
+                    config('keycloak.service_account_client_id'),
+                    config('keycloak.service_account_client_secret')
+                ),
+                new JwtTokenDecoder(
+                    $this->getRealmPublicKeyRetriever()
+                ),
+                $this->getCacheRepository()
+            );
+        });
+
         Auth::extend('keycloak', function (Application $app, $name, array $config) {
             return new KeycloakGuard(
                 $app->make(RequestBasedJwtTokenDecoder::class),
@@ -55,24 +72,33 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
         });
 
         $this->app->get('router')->aliasMiddleware('has-privilege', EnsureUserHasPrivilege::class);
+        $this->app->get('router')->aliasMiddleware(
+            'service-account-with-sync-role',
+            EnsureJwtBelongsToServiceAccountWithSyncRole::class
+        );
     }
 
     protected function getRealmPublicKeyRetriever(): RealmJwkRetrieverInterface
     {
-        $mode = Config::get('keycloak.realm_public_key_retrieval_mode');
+        $mode = config('keycloak.realm_public_key_retrieval_mode');
 
         return match ($mode) {
             'api' => new ApiRealmJwkRetriever(
-                new Client(Config::get('keycloak.guzzle_options', []))
+                new Client(config('keycloak.guzzle_options', []))
             ),
             'cached-api' => new CachedRealmJwkRetriever(
                 new ApiRealmJwkRetriever(
-                    new Client(Config::get('keycloak.guzzle_options', []))
+                    new Client(config('keycloak.guzzle_options', []))
                 ),
-                app('cache')->store(Config::get('keycloak.realm_public_key_cache_store'))
+                $this->getCacheRepository()
             ),
             'config' => new ConfigRealmJwkRetriever(),
             default => throw new UnexpectedValueException("Unsupported value for realm_public_key_retrieval_mode: $mode")
         };
+    }
+
+    protected function getCacheRepository(): Repository
+    {
+        return app('cache')->store(config('keycloak.cache_store'));
     }
 }

@@ -3,7 +3,6 @@
 namespace KeycloakAuthGuard\Services\Decoders;
 
 use Exception;
-use Illuminate\Support\Facades\Config;
 use KeycloakAuthGuard\Exceptions\InvalidJwtTokenException;
 use KeycloakAuthGuard\JwtToken;
 use KeycloakAuthGuard\Services\RealmJwkRetrieverInterface;
@@ -17,8 +16,8 @@ readonly class JwtTokenDecoder
 
     public function __construct(private RealmJwkRetrieverInterface $jwkRetriever)
     {
-        $this->keycloakBaseUrl = trim(Config::get('keycloak.base_url'), '/');
-        $this->realm = Config::get('keycloak.realm');
+        $this->keycloakBaseUrl = trim(config('keycloak.base_url'), '/');
+        $this->realm = config('keycloak.realm');
     }
 
     /**
@@ -39,7 +38,7 @@ readonly class JwtTokenDecoder
             $token = JwtToken::decode(
                 $token,
                 $this->jwkRetriever->getJwkOrJwks($kid),
-                Config::get('keycloak.leeway')
+                config('keycloak.leeway')
             );
         } catch (Exception $e) {
             throw new InvalidJwtTokenException('JWT token is invalid', 0, $e);
@@ -60,7 +59,7 @@ readonly class JwtTokenDecoder
     private function validate(stdClass $token, bool $validateAzp, bool $validateIss): void
     {
         if ($validateAzp) {
-            $acceptedAuthorizedParties = explode(',', Config::get('keycloak.accepted_authorized_parties'));
+            $acceptedAuthorizedParties = explode(',', config('keycloak.accepted_authorized_parties'));
             if (! property_exists($token, 'azp')) {
                 throw new InvalidJwtTokenException("Token 'azp' is not defined");
             }

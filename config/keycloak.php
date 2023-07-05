@@ -23,10 +23,10 @@ return [
 
     /*
      * Here you may define the cache store that should be used to store
-     * realm public key. This can be the name of any store that is
+     * realm public key && service account JWT. It can be the name of any store that is
      * configured in app/config/cache.php
      */
-    'realm_public_key_cache_store' => env('REALM_PUBLIC_KEY_CACHE_DRIVER', config('cache.default')),
+    'cache_store' => env('KEYCLOAK_CACHE_DRIVER', config('cache.default')),
 
     /*
      * Define static realm public key. To use it, you have to set up
@@ -76,6 +76,27 @@ return [
      */
     'accepted_authorized_parties' => env('ACCEPTED_AUTHORIZED_PARTIES', ''),
 
+    /*
+     * Keycloak client ID that will be used retrieve the JWT token of service account.
+     * The service account is needed to access sync endpoints of other services.
+     */
+    'service_account_client_id' => env('KEYCLOAK_SERVICE_ACCOUNT_CLIENT_ID', ''),
+
+    /*
+     * Keycloak client secret that will be used retrieve the JWT token of service account.
+     * The service account is needed to access sync endpoints of other services.
+     */
+    'service_account_client_secret' => env('KEYCLOAK_SERVICE_ACCOUNT_CLIENT_SECRET', ''),
+
+    /*
+     * Keycloak service account role that allow access to the sync endpoints.
+     */
+    'service_account_sync_role' => env('KEYCLOAK_SERVICE_ACCOUNT_SYNC_ROLE', ''),
+
+    /*
+     * Amount of seconds before token expiration that will be used to set cache TTL.
+     */
+    'service_account_jwt_cache_expiry_delay' => env('KEYCLOAK_SERVICE_ACCOUNT_CACHE_EXPIRY_DELAY', 60),
     /*
      * GuzzleHttp Client options
      * @link http://docs.guzzlephp.org/en/stable/request-options.html
