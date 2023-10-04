@@ -48,4 +48,9 @@ class CachedRealmJwkRetriever implements RealmJwkRetrieverInterface
     {
         return config('keycloak.realm_public_key_cache_ttl');
     }
+
+    public function cleanupCache(?string $kid = null): void
+    {
+        $this->repository->forget($this->getCacheKey($kid));
+    }
 }

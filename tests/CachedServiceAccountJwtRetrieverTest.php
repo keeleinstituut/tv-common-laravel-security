@@ -12,7 +12,6 @@ use KeycloakAuthGuard\Services\ConfigRealmJwkRetriever;
 use KeycloakAuthGuard\Services\Decoders\JwtTokenDecoder;
 use KeycloakAuthGuard\Services\ServiceAccountJwtRetriever;
 use Psr\SimpleCache\InvalidArgumentException;
-use RuntimeException;
 
 class CachedServiceAccountJwtRetrieverTest extends TestCase
 {
@@ -35,7 +34,7 @@ class CachedServiceAccountJwtRetrieverTest extends TestCase
      */
     public function test_receiving_and_caching_of_service_account_jwt()
     {
-        Http::fake(fn() => Http::response($this->getServiceAccountObtainJwtResponse()));
+        Http::fake(fn () => Http::response($this->getServiceAccountObtainJwtResponse()));
         $retriever = $this->getJwtRetriever();
         $jwt = $retriever->getJwt();
 
@@ -54,7 +53,7 @@ class CachedServiceAccountJwtRetrieverTest extends TestCase
     public function test_caching_of_service_account_jwt_that_will_expire_soon()
     {
         $cacheExpiryDelay = config('keycloak.service_account_jwt_cache_expiry_delay') - 1;
-        Http::fake(fn() => Http::response($this->getServiceAccountObtainJwtResponse($cacheExpiryDelay)));
+        Http::fake(fn () => Http::response($this->getServiceAccountObtainJwtResponse($cacheExpiryDelay)));
         $this->expectException(TooShortJwtLifetimeException::class);
         $this->getJwtRetriever()->getJwt();
     }
@@ -66,7 +65,7 @@ class CachedServiceAccountJwtRetrieverTest extends TestCase
     public function test_caching_of_service_account_without_exp_claim()
     {
         $this->buildCustomToken([]);
-        Http::fake(fn() => Http::response([
+        Http::fake(fn () => Http::response([
             'access_token' => $this->token,
             'expires_in' => 300,
         ]));
