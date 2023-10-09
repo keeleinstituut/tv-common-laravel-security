@@ -26,7 +26,7 @@ use UnexpectedValueException;
 
 class KeycloakAuthServiceProvider extends AuthServiceProvider
 {
-    public function boot()
+    public function boot(): void
     {
         $this->publishes([__DIR__.'/../config/keycloak.php' => config_path('keycloak.php')], 'config');
         $this->mergeConfigFrom(__DIR__.'/../config/keycloak.php', 'keycloak');
@@ -40,27 +40,27 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
-    public function register()
+    public function register(): void
     {
-        $jwkRetriever = $this->getRealmPublicKeyRetriever();
-        $this->app->bind(RealmJwkRetrieverInterface::class, function (Application $app) use ($jwkRetriever) {
-            return $jwkRetriever;
-        });
+        $this->app->bind(
+            RealmJwkRetrieverInterface::class,
+            fn(Application $app) => $this->getRealmPublicKeyRetriever()
+        );
 
-        $this->app->bind(RequestBasedJwtTokenDecoder::class, function (Application $app) use ($jwkRetriever) {
+        $this->app->bind(RequestBasedJwtTokenDecoder::class, function (Application $app) {
             return new RequestBasedJwtTokenDecoder(
-                new JwtTokenDecoder($jwkRetriever),
+                new JwtTokenDecoder($app->make(RealmJwkRetrieverInterface::class)),
                 $app->get('request')
             );
         });
 
-        $this->app->bind(ServiceAccountJwtRetrieverInterface::class, function (Application $app) use ($jwkRetriever) {
+        $this->app->bind(ServiceAccountJwtRetrieverInterface::class, function (Application $app) {
             return new CachedServiceAccountJwtRetriever(
                 new ServiceAccountJwtRetriever(
                     config('keycloak.service_account_client_id'),
                     config('keycloak.service_account_client_secret')
                 ),
-                new JwtTokenDecoder($jwkRetriever),
+                new JwtTokenDecoder($app->make(RealmJwkRetrieverInterface::class)),
                 $this->getCacheRepository()
             );
         });
