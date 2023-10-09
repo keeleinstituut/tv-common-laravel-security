@@ -42,24 +42,25 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
      */
     public function register()
     {
-        $this->app->bind(RequestBasedJwtTokenDecoder::class, function (Application $app) {
+        $jwkRetriever = $this->getRealmPublicKeyRetriever();
+        $this->app->bind(RealmJwkRetrieverInterface::class, function (Application $app) use ($jwkRetriever) {
+            return $jwkRetriever;
+        });
+
+        $this->app->bind(RequestBasedJwtTokenDecoder::class, function (Application $app) use ($jwkRetriever) {
             return new RequestBasedJwtTokenDecoder(
-                new JwtTokenDecoder(
-                    $this->getRealmPublicKeyRetriever()
-                ),
+                new JwtTokenDecoder($jwkRetriever),
                 $app->get('request')
             );
         });
 
-        $this->app->bind(ServiceAccountJwtRetrieverInterface::class, function (Application $app) {
+        $this->app->bind(ServiceAccountJwtRetrieverInterface::class, function (Application $app) use ($jwkRetriever) {
             return new CachedServiceAccountJwtRetriever(
                 new ServiceAccountJwtRetriever(
                     config('keycloak.service_account_client_id'),
                     config('keycloak.service_account_client_secret')
                 ),
-                new JwtTokenDecoder(
-                    $this->getRealmPublicKeyRetriever()
-                ),
+                new JwtTokenDecoder($jwkRetriever),
                 $this->getCacheRepository()
             );
         });
