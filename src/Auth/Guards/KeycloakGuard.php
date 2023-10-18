@@ -58,7 +58,7 @@ class KeycloakGuard implements Guard
         ];
     }
 
-    private function getCustomClaimsTokenData(string $key = null, mixed $default = null): mixed
+    public function getCustomClaimsTokenData(string $key = null, mixed $default = null): mixed
     {
         $customClaimsKey = config('keycloak.jwt_payload_custom_claims_attribute');
         $customClaimsTokenData = $this->getTokenPayloadData($customClaimsKey, []);
