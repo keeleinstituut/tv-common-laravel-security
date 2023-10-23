@@ -44,7 +44,7 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
     {
         $this->app->bind(
             RealmJwkRetrieverInterface::class,
-            fn(Application $app) => $this->getRealmPublicKeyRetriever()
+            fn (Application $app) => $this->getRealmPublicKeyRetriever()
         );
 
         $this->app->bind(RequestBasedJwtTokenDecoder::class, function (Application $app) {

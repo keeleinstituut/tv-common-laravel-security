@@ -24,7 +24,12 @@ readonly class RequestBasedJwtTokenDecoder
             return null;
         }
 
-        return $this->decoder->decodeWithSpecifiedValidation($token, $validateAzp, $validateIss);
+        return $this->decodeJwtWithSpecifiedValidation($token, $validateAzp, $validateIss);
+    }
+
+    public function decodeJwtWithSpecifiedValidation(string $jwt, bool $validateAzp, bool $validateIss): ?stdClass
+    {
+        return $this->decoder->decodeWithSpecifiedValidation($jwt, $validateAzp, $validateIss);
     }
 
     /**
