@@ -36,6 +36,15 @@ readonly class EnsureJwtBelongsToServiceAccountWithSyncRole
         return $this->hasSyncRole($decodedJwt);
     }
 
+    public function isJwtAuthorized(string $jwt): bool
+    {
+        $decodedJwt = $this->jwtDecoder->decodeJwtWithSpecifiedValidation($jwt, false, true);
+
+        abort_if(empty($decodedJwt), 401);
+
+        return $this->hasSyncRole($decodedJwt);
+    }
+
     private function hasSyncRole(stdClass $decodedJwt): bool
     {
         return isset($decodedJwt->realm_access->roles)
