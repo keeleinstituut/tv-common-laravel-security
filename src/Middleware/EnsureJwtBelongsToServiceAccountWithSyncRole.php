@@ -32,25 +32,27 @@ readonly class EnsureJwtBelongsToServiceAccountWithSyncRole
         $decodedJwt = $this->jwtDecoder->getDecodedJwtWithSpecifiedValidation(false, true);
 
         abort_if(empty($decodedJwt), 401);
-
         return $this->hasSyncRole($decodedJwt);
     }
 
-    public function isJwtAuthorized(string $jwt): bool
+    public function jwtHasRealmRole(string $jwt, string $realmRole): bool
     {
-        $decodedJwt = $this->jwtDecoder->decodeJwtWithSpecifiedValidation($jwt, false, true);
+        $decodedJwt = $this->jwtDecoder->decodeJwtWithSpecifiedValidation($jwt, false, true, false);
 
         abort_if(empty($decodedJwt), 401);
+        return $this->hasRealmRole($decodedJwt, $realmRole);
+    }
 
-        return $this->hasSyncRole($decodedJwt);
+    private function hasRealmRole(stdClass $decodedJwt, string $realmRole) {
+        return isset($decodedJwt->realm_access->roles)
+            && filled($decodedJwt->realm_access->roles)
+            && is_array($decodedJwt->realm_access->roles)
+            && filled($realmRole)
+            && in_array($realmRole, $decodedJwt->realm_access->roles);
     }
 
     private function hasSyncRole(stdClass $decodedJwt): bool
     {
-        return isset($decodedJwt->realm_access->roles)
-            && filled($decodedJwt->realm_access->roles)
-            && is_array($decodedJwt->realm_access->roles)
-            && filled(config('keycloak.service_account_sync_role'))
-            && in_array(config('keycloak.service_account_sync_role'), $decodedJwt->realm_access->roles);
+        return $this->hasRealmRole($decodedJwt, config('keycloak.service_account_sync_role'));
     }
 }

@@ -3,6 +3,7 @@
 namespace KeycloakAuthGuard\Services\Decoders;
 
 use Exception;
+use Firebase\JWT\ExpiredException;
 use KeycloakAuthGuard\Exceptions\InvalidJwtTokenException;
 use KeycloakAuthGuard\JwtToken;
 use KeycloakAuthGuard\Services\RealmJwkRetrieverInterface;
@@ -25,21 +26,28 @@ readonly class JwtTokenDecoder
      */
     public function decode(string $token): ?stdClass
     {
-        return $this->decodeWithSpecifiedValidation($token, true, true);
+        return $this->decodeWithSpecifiedValidation($token, true, true, true);
     }
 
     /**
      * @throws InvalidJwtTokenException
      */
-    public function decodeWithSpecifiedValidation(string $token, bool $validateAzp, bool $validateIss): ?stdClass
+    public function decodeWithSpecifiedValidation(string $token, bool $validateAzp, bool $validateIss, bool $validateExpiry = true): ?stdClass
     {
         try {
-            $kid = JwtToken::getHeader($token)->kid ?? null;
-            $token = JwtToken::decode(
-                $token,
-                $this->jwkRetriever->getJwkOrJwks($kid),
-                config('keycloak.leeway')
-            );
+            try {
+                $kid = JwtToken::getHeader($token)->kid ?? null;
+                $token = JwtToken::decode(
+                    $token,
+                    $this->jwkRetriever->getJwkOrJwks($kid),
+                    config('keycloak.leeway')
+                );
+            } catch (ExpiredException $e) {
+                if ($validateExpiry) {
+                    throw $e;
+                }
+                $token = $e->getPayload();
+            }
         } catch (Exception $e) {
             throw new InvalidJwtTokenException('JWT token is invalid', 0, $e);
         }

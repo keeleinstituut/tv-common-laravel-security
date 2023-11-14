@@ -51,6 +51,7 @@ readonly class CachedServiceAccountJwtRetriever implements ServiceAccountJwtRetr
         $decodedToken = $this->decoder->decodeWithSpecifiedValidation(
             $response['access_token'],
             false,
+            true,
             true
         );
 

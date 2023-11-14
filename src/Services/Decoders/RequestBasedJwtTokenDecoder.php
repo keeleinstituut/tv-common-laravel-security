@@ -18,18 +18,18 @@ readonly class RequestBasedJwtTokenDecoder
         return $this->getDecodedJwtWithSpecifiedValidation(true, true);
     }
 
-    public function getDecodedJwtWithSpecifiedValidation(bool $validateAzp, bool $validateIss): ?stdClass
+    public function getDecodedJwtWithSpecifiedValidation(bool $validateAzp, bool $validateIss, bool $validateExpiry = true): ?stdClass
     {
         if (! $token = $this->getToken()) {
             return null;
         }
 
-        return $this->decodeJwtWithSpecifiedValidation($token, $validateAzp, $validateIss);
+        return $this->decodeJwtWithSpecifiedValidation($token, $validateAzp, $validateIss, $validateExpiry);
     }
 
-    public function decodeJwtWithSpecifiedValidation(string $jwt, bool $validateAzp, bool $validateIss): ?stdClass
+    public function decodeJwtWithSpecifiedValidation(string $jwt, bool $validateAzp, bool $validateIss, bool $validateExpiry = true): ?stdClass
     {
-        return $this->decoder->decodeWithSpecifiedValidation($jwt, $validateAzp, $validateIss);
+        return $this->decoder->decodeWithSpecifiedValidation($jwt, $validateAzp, $validateIss, $validateExpiry);
     }
 
     /**
