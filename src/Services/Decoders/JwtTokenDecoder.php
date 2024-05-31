@@ -26,7 +26,7 @@ readonly class JwtTokenDecoder
      */
     public function decode(string $token): ?stdClass
     {
-        return $this->decodeWithSpecifiedValidation($token, true, true, true);
+        return $this->decodeWithSpecifiedValidation($token, true, true);
     }
 
     /**
