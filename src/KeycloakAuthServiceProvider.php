@@ -7,6 +7,7 @@ use Illuminate\Cache\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 use KeycloakAuthGuard\Auth\Guards\KeycloakGuard;
 use KeycloakAuthGuard\Auth\JwtPayloadUserProvider;
 use KeycloakAuthGuard\Middleware\EnsureJwtBelongsToServiceAccountWithSyncRole;
@@ -34,6 +35,12 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
         Auth::provider('jwt-payload-users', function ($app, array $config) {
             return new JwtPayloadUserProvider($config['model']);
         });
+
+        Route::aliasMiddleware('has-privilege', EnsureUserHasPrivilege::class);
+        Route::aliasMiddleware(
+            'service-account-with-sync-role',
+            EnsureJwtBelongsToServiceAccountWithSyncRole::class
+        );
     }
 
     /**
@@ -71,12 +78,6 @@ class KeycloakAuthServiceProvider extends AuthServiceProvider
                 Auth::createUserProvider($config['provider']),
             );
         });
-
-        $this->app->get('router')->aliasMiddleware('has-privilege', EnsureUserHasPrivilege::class);
-        $this->app->get('router')->aliasMiddleware(
-            'service-account-with-sync-role',
-            EnsureJwtBelongsToServiceAccountWithSyncRole::class
-        );
     }
 
     protected function getRealmPublicKeyRetriever(): RealmJwkRetrieverInterface

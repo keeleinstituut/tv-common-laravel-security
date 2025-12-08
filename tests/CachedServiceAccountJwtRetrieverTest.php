@@ -54,8 +54,14 @@ class CachedServiceAccountJwtRetrieverTest extends TestCase
     {
         $cacheExpiryDelay = config('keycloak.service_account_jwt_cache_expiry_delay') - 1;
         Http::fake(fn () => Http::response($this->getServiceAccountObtainJwtResponse($cacheExpiryDelay)));
-        $this->expectException(TooShortJwtLifetimeException::class);
-        $this->getJwtRetriever()->getJwt();
+        $retriever = $this->getJwtRetriever();
+        $jwt = $retriever->getJwt();
+
+        $cacheStorage = $this->getCacheRepository();
+        // JWT is still returned even though caching failed due to short lifetime
+        $this->assertEquals($this->getServiceAccountObtainJwtResponse($cacheExpiryDelay)['access_token'], $jwt);
+        // Token should NOT be cached because TooShortJwtLifetimeException was thrown during cache storage
+        $this->assertFalse($cacheStorage->has($retriever->getCacheKey()));
     }
 
     /**
@@ -69,8 +75,14 @@ class CachedServiceAccountJwtRetrieverTest extends TestCase
             'access_token' => $this->token,
             'expires_in' => 300,
         ]));
-        $this->expectException(InvalidJwtTokenException::class);
-        $this->getJwtRetriever()->getJwt();
+        $retriever = $this->getJwtRetriever();
+        $jwt = $retriever->getJwt();
+
+        $cacheStorage = $this->getCacheRepository();
+        // JWT is still returned even though caching failed due to missing exp claim
+        $this->assertEquals($this->token, $jwt);
+        // Token should NOT be cached because InvalidJwtTokenException was thrown during cache storage
+        $this->assertFalse($cacheStorage->has($retriever->getCacheKey()));
     }
 
     private function getJwtRetriever(): CachedServiceAccountJwtRetriever
