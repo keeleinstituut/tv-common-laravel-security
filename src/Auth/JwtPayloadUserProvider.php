@@ -63,4 +63,14 @@ readonly class JwtPayloadUserProvider implements UserProvider
     {
         throw new BadMethodCallException('Unexpected method [validateCredentials] call');
     }
+
+    /**
+     * Rehash the user's password if required and supported.
+     *
+     * @param  bool  $force
+     */
+    public function rehashPasswordIfRequired(Authenticatable $user, array $credentials, bool $force = false): void
+    {
+        // JWT-based authentication doesn't use passwords, so this is a no-op
+    }
 }

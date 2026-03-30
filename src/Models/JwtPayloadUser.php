@@ -56,6 +56,11 @@ readonly class JwtPayloadUser implements Authenticatable
         throw new BadMethodCallException('Unexpected method [getAuthPassword] call');
     }
 
+    public function getAuthPasswordName(): string
+    {
+        throw new BadMethodCallException('Unexpected method [getAuthPasswordName] call');
+    }
+
     public function getRememberToken(): string
     {
         throw new BadMethodCallException('Unexpected method [getRememberToken] call');
