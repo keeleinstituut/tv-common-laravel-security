@@ -46,7 +46,7 @@ class TestCase extends Orchestra
         // Prepare private/public keys and a default JWT token, with a simple payload
         $this->privateKey = openssl_pkey_new([
             'digest_alg' => 'sha256',
-            'private_key_bits' => 1024,
+            'private_key_bits' => 2048,
             'private_key_type' => OPENSSL_KEYTYPE_RSA,
         ]);
 
