@@ -6,7 +6,7 @@ use BadMethodCallException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use KeycloakAuthGuard\Exceptions\InvalidJwtTokenPayloadException;
 
-readonly class JwtPayloadUser implements Authenticatable
+class JwtPayloadUser implements Authenticatable
 {
     public string $id;
 
