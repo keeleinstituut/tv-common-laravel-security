@@ -7,8 +7,11 @@
     ],
     "require": {
         "firebase/php-jwt": "^7.0",
-        "guzzlehttp/guzzle": "^7.8",
+        "guzzlehttp/guzzle": "^7.12.1",
         "php": "^8.3"
+    },
+    "conflict": {
+        "guzzlehttp/psr7": "<2.12.1"
     },
     "autoload": {
         "psr-4": {
